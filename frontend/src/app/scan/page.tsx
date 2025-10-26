@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { api } from '@/services/api';
 import { useAppStore } from '@/store/appStore';
 import { useSessionStore } from '@/store/sessionStore';
+import { Camera, Upload, Scan, Sparkles, ArrowRight, X, Loader2 } from 'lucide-react';
 
 function ScanPageContent() {
   const router = useRouter();
@@ -131,122 +132,194 @@ function ScanPageContent() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background">
-      <div className="max-w-2xl w-full space-y-6">
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold">Scan Your Receipt</h1>
-          <p className="text-muted-foreground">
-            Take a photo or upload an image of your receipt
-          </p>
-        </div>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 py-12">
+        <div className="max-w-3xl w-full space-y-8">
+          {/* Header */}
+          <div className="text-center space-y-4">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 dark:bg-blue-950 border border-blue-200 dark:border-blue-800">
+              <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                AI-Powered OCR
+              </span>
+            </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Receipt Image</CardTitle>
-            <CardDescription>
-              We'll automatically extract items and prices
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Preview */}
-            {previewUrl && !isCameraActive && (
-              <div className="relative aspect-[3/4] max-h-96 overflow-hidden rounded-lg border">
-                <img
-                  src={previewUrl}
-                  alt="Receipt preview"
-                  className="w-full h-full object-contain"
-                />
-              </div>
-            )}
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white">
+              Scan Your Receipt
+            </h1>
 
-            {/* Camera View */}
-            {isCameraActive && (
-              <div className="relative aspect-[3/4] max-h-96 overflow-hidden rounded-lg border">
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute bottom-4 left-0 right-0 flex justify-center">
-                  <Button
-                    onClick={handleTakePhoto}
-                    size="lg"
-                    className="rounded-full"
-                  >
-                    Take Photo
-                  </Button>
+            <p className="text-lg text-gray-600 dark:text-gray-400">
+              Upload or capture your receipt and let Claude AI extract all the items
+            </p>
+          </div>
+
+          {/* Main Card */}
+          <Card className="border bg-white dark:bg-gray-900 shadow-lg">
+            <CardContent className="p-6 md:p-8 space-y-6">
+              {/* Preview */}
+              {previewUrl && !isCameraActive && (
+                <div className="space-y-4">
+                  <div className="relative aspect-[3/4] max-h-[500px] overflow-hidden rounded-xl border-2 border-gray-200 dark:border-gray-700 shadow-xl bg-gray-50 dark:bg-gray-800">
+                    <img
+                      src={previewUrl}
+                      alt="Receipt preview"
+                      className="w-full h-full object-contain"
+                    />
+                    <Button
+                      onClick={() => {
+                        setSelectedFile(null);
+                        setPreviewUrl(null);
+                      }}
+                      size="icon"
+                      variant="destructive"
+                      className="absolute top-4 right-4 rounded-full shadow-lg"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Upload Options */}
-            {!previewUrl && !isCameraActive && (
-              <div className="grid gap-4 md:grid-cols-2">
-                <Button
-                  onClick={handleCameraCapture}
-                  variant="outline"
-                  size="lg"
-                  className="h-32"
-                >
-                  <div className="flex flex-col items-center gap-2">
-                    <span className="text-3xl">📷</span>
-                    <span>Use Camera</span>
+              {/* Camera View */}
+              {isCameraActive && (
+                <div className="relative aspect-[3/4] max-h-[500px] overflow-hidden rounded-xl border-2 border-gray-200 dark:border-gray-700 shadow-xl">
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 border-4 border-blue-500/50 rounded-xl pointer-events-none" />
+                  <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-4">
+                    <Button
+                      onClick={() => {
+                        const stream = videoRef.current?.srcObject as MediaStream;
+                        stream?.getTracks().forEach(track => track.stop());
+                        setIsCameraActive(false);
+                      }}
+                      size="lg"
+                      variant="secondary"
+                      className="rounded-full px-8"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleTakePhoto}
+                      size="lg"
+                      className="rounded-full px-8 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg"
+                    >
+                      <Camera className="w-5 h-5 mr-2" />
+                      Capture
+                    </Button>
                   </div>
-                </Button>
-                <Button
-                  onClick={() => fileInputRef.current?.click()}
-                  variant="outline"
-                  size="lg"
-                  className="h-32"
-                >
-                  <div className="flex flex-col items-center gap-2">
-                    <span className="text-3xl">📁</span>
-                    <span>Upload File</span>
-                  </div>
-                </Button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                />
-              </div>
-            )}
+                </div>
+              )}
 
-            {/* Actions */}
-            <div className="flex flex-col gap-2">
+              {/* Upload Options */}
+              {!previewUrl && !isCameraActive && (
+                <div className="grid gap-4 md:grid-cols-2">
+                  <button
+                    onClick={handleCameraCapture}
+                    className="p-8 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-blue-500 hover:shadow-lg transition-shadow bg-white dark:bg-gray-800"
+                  >
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="w-16 h-16 rounded-xl bg-blue-600 flex items-center justify-center">
+                        <Camera className="w-8 h-8 text-white" />
+                      </div>
+                      <div className="text-center">
+                        <div className="font-semibold text-lg mb-1">Use Camera</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          Take a photo now
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="p-8 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-purple-500 hover:shadow-lg transition-shadow bg-white dark:bg-gray-800"
+                  >
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="w-16 h-16 rounded-xl bg-purple-600 flex items-center justify-center">
+                        <Upload className="w-8 h-8 text-white" />
+                      </div>
+                      <div className="text-center">
+                        <div className="font-semibold text-lg mb-1">Upload File</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          Browse your files
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                </div>
+              )}
+
+              {/* Actions */}
               {selectedFile && (
-                <>
+                <div className="flex flex-col gap-3 pt-4">
                   <Button
                     onClick={handleScanReceipt}
                     size="lg"
                     disabled={isScanning}
+                    className="h-14 text-lg font-semibold bg-blue-600 hover:bg-blue-700"
                   >
-                    {isScanning ? 'Scanning...' : 'Scan Receipt'}
+                    {isScanning ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Scanning with Claude AI...
+                      </>
+                    ) : (
+                      <>
+                        <Scan className="w-5 h-5 mr-2" />
+                        Scan Receipt with AI
+                        <ArrowRight className="w-5 h-5 ml-2" />
+                      </>
+                    )}
                   </Button>
-                  <Button
-                    onClick={() => {
-                      setSelectedFile(null);
-                      setPreviewUrl(null);
-                    }}
-                    variant="outline"
-                  >
-                    Choose Different Image
-                  </Button>
-                </>
+                </div>
               )}
-              <Button
-                onClick={handleSkipScan}
-                variant="ghost"
-              >
-                Skip and Enter Manually
-              </Button>
+
+              <div className="text-center pt-2">
+                <Button
+                  onClick={handleSkipScan}
+                  variant="ghost"
+                  className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+                >
+                  Skip and enter items manually
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Info Section */}
+          <div className="grid md:grid-cols-3 gap-4 text-center">
+            <div className="p-4 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
+              <div className="text-2xl mb-2">✨</div>
+              <div className="font-semibold text-sm">AI-Powered</div>
+              <div className="text-xs text-gray-600 dark:text-gray-400">Claude Sonnet 4.5</div>
             </div>
-          </CardContent>
-        </Card>
+            <div className="p-4 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
+              <div className="text-2xl mb-2">⚡</div>
+              <div className="font-semibold text-sm">Lightning Fast</div>
+              <div className="text-xs text-gray-600 dark:text-gray-400">Results in seconds</div>
+            </div>
+            <div className="p-4 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
+              <div className="text-2xl mb-2">🎯</div>
+              <div className="font-semibold text-sm">High Accuracy</div>
+              <div className="text-xs text-gray-600 dark:text-gray-400">99%+ precision</div>
+            </div>
+          </div>
+        </div>
       </div>
+
     </div>
   );
 }
