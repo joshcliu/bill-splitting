@@ -35,11 +35,10 @@ This application allows users to scan restaurant receipts and automatically spli
 ### Backend
 - **Runtime**: Python 3.11+
 - **Framework**: FastAPI (async support, automatic API docs, WebSocket support)
-- **Database**: PostgreSQL (relational data) + Redis (sessions/cache)
-- **ORM**: SQLAlchemy with Alembic for migrations
-- **Real-time**: python-socketio with FastAPI integration
-- **OCR Service**: Google Cloud Vision API, AWS Textract, or pytesseract
-- **Authentication**: FastAPI JWT or Firebase Auth
+- **Receipt Parsing**: Claude Sonnet 4.5 vision API (LLM-based parsing)
+- **Data Storage**: In-memory (Redis) for MVP, PostgreSQL for production
+- **Real-time**: WebSocket for live collaboration
+- **Authentication**: Simple JWT tokens (optional for MVP)
 - **API**: RESTful + WebSocket
 
 ### Infrastructure
@@ -77,48 +76,37 @@ bill-splitting/
 │   ├── app/
 │   │   ├── __init__.py
 │   │   ├── main.py               # FastAPI app entry point
-│   │   ├── api/
+│   │   ├── config.py             # Configuration & environment variables
+│   │   │
+│   │   ├── routes/               # API endpoints
 │   │   │   ├── __init__.py
-│   │   │   ├── routes/           # API route handlers
-│   │   │   │   ├── sessions.py
-│   │   │   │   ├── receipts.py
-│   │   │   │   ├── items.py
-│   │   │   │   └── users.py
-│   │   │   └── deps.py           # Dependencies (DB sessions, auth)
-│   │   ├── models/               # SQLAlchemy models
-│   │   │   ├── __init__.py
-│   │   │   ├── user.py
-│   │   │   ├── session.py
-│   │   │   ├── bill_item.py
-│   │   │   └── participant.py
-│   │   ├── schemas/              # Pydantic schemas (request/response)
-│   │   │   ├── __init__.py
-│   │   │   ├── session.py
-│   │   │   ├── receipt.py
-│   │   │   └── user.py
+│   │   │   ├── receipts.py       # Receipt scanning with Claude vision
+│   │   │   ├── sessions.py       # Bill splitting sessions
+│   │   │   └── websocket.py      # Real-time collaboration
+│   │   │
 │   │   ├── services/             # Business logic
 │   │   │   ├── __init__.py
-│   │   │   ├── ocr_service.py    # Receipt OCR processing
-│   │   │   ├── bill_service.py   # Bill calculation logic
-│   │   │   └── payment_service.py
-│   │   ├── core/                 # Core configuration
+│   │   │   ├── receipt_parser.py # Claude vision receipt parsing
+│   │   │   ├── bill_calculator.py # Split calculations
+│   │   │   └── session_manager.py # Session state management
+│   │   │
+│   │   ├── models/               # Data models (in-memory or DB)
 │   │   │   ├── __init__.py
-│   │   │   ├── config.py         # Settings and environment
-│   │   │   ├── security.py       # Auth utilities
-│   │   │   └── database.py       # DB connection
-│   │   ├── middleware/           # Custom middleware
-│   │   │   └── __init__.py
-│   │   ├── socket/               # WebSocket handlers
-│   │   │   ├── __init__.py
-│   │   │   └── events.py
+│   │   │   ├── receipt.py        # Receipt & items
+│   │   │   ├── session.py        # Session & participants
+│   │   │   └── schemas.py        # Pydantic validation schemas
+│   │   │
 │   │   └── utils/                # Helper functions
-│   │       └── __init__.py
-│   ├── alembic/                  # Database migrations
-│   │   ├── versions/
-│   │   └── env.py
+│   │       ├── __init__.py
+│   │       └── validators.py     # Input validation
+│   │
 │   ├── tests/
+│   │   ├── test_receipt_parser.py
+│   │   └── test_bill_calculator.py
+│   │
 │   ├── requirements.txt
-│   └── pyproject.toml
+│   ├── .env.example
+│   └── README.md
 │
 ├── shared/                       # Shared types between frontend/backend
 │   └── types/
@@ -272,20 +260,27 @@ item_assignments
 4. Session creator sees payment tracking dashboard
 5. Session completes when all payments marked as received
 
-## OCR Processing Pipeline
+## Receipt Processing Pipeline (LLM Vision)
 
 1. **Image Upload** → Receipt image captured or uploaded
-2. **Pre-processing** → Image enhancement (contrast, rotation correction)
-3. **OCR Extraction** → Text extraction using OCR service
-4. **Parsing** → Extract structured data:
+2. **LLM Vision Processing** → Send image to Claude Sonnet 4.5 with structured prompt
+3. **Structured Response** → Claude returns JSON with:
    - Restaurant name
-   - Line items (name + price)
+   - Line items (name, price, quantity)
    - Subtotal
    - Tax
    - Tip (if present)
    - Total
-5. **Validation** → Check if totals add up correctly
-6. **Review** → User confirms/corrects extracted data
+   - Confidence score
+4. **Validation** → Backend validates totals add up correctly
+5. **Review** → User confirms/corrects extracted data
+
+**Benefits over traditional OCR:**
+- Higher accuracy with context understanding
+- No complex regex parsing needed
+- Handles various receipt formats automatically
+- Better at dealing with messy or handwritten receipts
+- Direct structured output
 
 ## Security Considerations
 
@@ -324,9 +319,9 @@ item_assignments
 ### Prerequisites
 - Python 3.11+
 - Node.js 18+ (for frontend)
-- PostgreSQL 14+
-- Redis (for caching and sessions)
-- Google Cloud Vision API key (or alternative OCR service)
+- Anthropic API key (for Claude vision)
+- Redis (optional - for session storage in MVP)
+- PostgreSQL (optional - for production persistence)
 
 ### Installation
 
@@ -345,13 +340,10 @@ pip install -r requirements.txt
 
 # Set up environment variables
 cp .env.example .env
-# Edit .env with your configuration
-
-# Run database migrations
-alembic upgrade head
+# Edit .env and add your ANTHROPIC_API_KEY
 
 # Start development server
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+uvicorn app.main:app --reload --port 8000
 ```
 
 #### Frontend Setup
@@ -373,38 +365,20 @@ npm run dev
 
 #### Backend (.env)
 ```bash
-# Database
-DATABASE_URL=postgresql://user:password@localhost:5432/bill_splitting
-REDIS_URL=redis://localhost:6379
-
-# OCR Service
-GOOGLE_CLOUD_VISION_API_KEY=your_api_key
-# OR
-AWS_ACCESS_KEY_ID=your_key
-AWS_SECRET_ACCESS_KEY=your_secret
-AWS_REGION=us-east-1
-
-# Authentication (JWT)
-SECRET_KEY=your-secret-key-min-32-characters
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-
-# File Storage
-AWS_S3_BUCKET=your_bucket
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
-
-# CORS
-FRONTEND_URL=http://localhost:3000
-
-# Payment APIs (optional)
-VENMO_API_KEY=your_key
-PAYPAL_CLIENT_ID=your_client_id
+# Claude API (Required)
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
+CLAUDE_MODEL=claude-sonnet-4-20250514
 
 # Application
 DEBUG=True
 LOG_LEVEL=INFO
+
+# CORS
+FRONTEND_URL=http://localhost:3000
+
+# Optional - For production
+# REDIS_URL=redis://localhost:6379
+# DATABASE_URL=postgresql://user:password@localhost:5432/bill_splitting
 ```
 
 #### Frontend (.env.local)
