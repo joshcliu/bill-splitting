@@ -33,11 +33,13 @@ This application allows users to scan restaurant receipts and automatically spli
 - **Receipt Capture**: Device camera API
 
 ### Backend
-- **Runtime**: Node.js with Express or Next.js API routes
+- **Runtime**: Python 3.11+
+- **Framework**: FastAPI (async support, automatic API docs, WebSocket support)
 - **Database**: PostgreSQL (relational data) + Redis (sessions/cache)
-- **Real-time**: Socket.io
-- **OCR Service**: Google Cloud Vision API, AWS Textract, or Tesseract.js
-- **Authentication**: NextAuth.js or Firebase Auth
+- **ORM**: SQLAlchemy with Alembic for migrations
+- **Real-time**: python-socketio with FastAPI integration
+- **OCR Service**: Google Cloud Vision API, AWS Textract, or pytesseract
+- **Authentication**: FastAPI JWT or Firebase Auth
 - **API**: RESTful + WebSocket
 
 ### Infrastructure
