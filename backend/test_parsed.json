@@ -1,0 +1,52 @@
+{
+  "restaurant_name": "Matsu Nori Handroll Bar",
+  "items": [
+    {
+      "name": "Mango Salmon",
+      "price": 16.0,
+      "quantity": 2
+    },
+    {
+      "name": "Spicy Tuna",
+      "price": 16.0,
+      "quantity": 2
+    },
+    {
+      "name": "Miso butter cod",
+      "price": 22.0,
+      "quantity": 2
+    },
+    {
+      "name": "OG miso Cod",
+      "price": 22.0,
+      "quantity": 2
+    },
+    {
+      "name": "Spicy scallop",
+      "price": 15.5,
+      "quantity": 2
+    },
+    {
+      "name": "The Lobster Roll",
+      "price": 17.5,
+      "quantity": 1
+    },
+    {
+      "name": "A5 Miyazaki Wagyu",
+      "price": null,
+      "quantity": 1
+    }
+  ],
+  "subtotal": 131.0,
+  "tax": 9.17,
+  "tip": null,
+  "total": 140.17,
+  "confidence": "high",
+  "validation": {
+    "is_valid": true,
+    "issues": [],
+    "warnings": [
+      "Items sum ($200.50) doesn't match subtotal ($131.00). Some items may be missing or incorrect."
+    ]
+  }
+}

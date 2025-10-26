@@ -241,7 +241,7 @@ Return ONLY the JSON object, no other text or explanation."""
 
         # Check if items sum to subtotal
         if items and subtotal is not None:
-            items_sum = sum(item.get('price', 0) * item.get('quantity', 1) for item in items)
+            items_sum = sum((item.get('price') or 0) * (item.get('quantity') or 1) for item in items)
             difference = abs(items_sum - subtotal)
             if difference > 0.02:
                 warnings.append(

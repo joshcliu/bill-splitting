@@ -33,8 +33,8 @@ def print_receipt(receipt_data):
         print(f"\n📝 Items ({len(items)}):")
         for i, item in enumerate(items, 1):
             name = item.get('name', 'Unknown')
-            price = item.get('price', 0)
-            qty = item.get('quantity', 1)
+            price = item.get('price') or 0
+            qty = item.get('quantity') or 1
             if qty > 1:
                 print(f"  {i}. {name} x{qty} - ${price:.2f} each (${price * qty:.2f} total)")
             else:
