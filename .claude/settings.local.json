@@ -3,6 +3,7 @@
     "allow": [
       "Bash(mkdir:*)",
       "Bash(touch:*)",
+      "Bash(python:*)",
       "Bash(npx create-next-app:*)",
       "Bash(npm install:*)",
       "Bash(npx shadcn@latest init -y)",
