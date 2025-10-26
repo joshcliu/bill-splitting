@@ -74,21 +74,51 @@ bill-splitting/
 │   └── package.json
 │
 ├── backend/
-│   ├── src/
-│   │   ├── controllers/          # Request handlers
-│   │   ├── models/               # Database models
-│   │   ├── routes/               # API routes
+│   ├── app/
+│   │   ├── __init__.py
+│   │   ├── main.py               # FastAPI app entry point
+│   │   ├── api/
+│   │   │   ├── __init__.py
+│   │   │   ├── routes/           # API route handlers
+│   │   │   │   ├── sessions.py
+│   │   │   │   ├── receipts.py
+│   │   │   │   ├── items.py
+│   │   │   │   └── users.py
+│   │   │   └── deps.py           # Dependencies (DB sessions, auth)
+│   │   ├── models/               # SQLAlchemy models
+│   │   │   ├── __init__.py
+│   │   │   ├── user.py
+│   │   │   ├── session.py
+│   │   │   ├── bill_item.py
+│   │   │   └── participant.py
+│   │   ├── schemas/              # Pydantic schemas (request/response)
+│   │   │   ├── __init__.py
+│   │   │   ├── session.py
+│   │   │   ├── receipt.py
+│   │   │   └── user.py
 │   │   ├── services/             # Business logic
-│   │   │   ├── ocr.service.ts    # Receipt OCR processing
-│   │   │   ├── bill.service.ts   # Bill calculation logic
-│   │   │   └── payment.service.ts
-│   │   ├── middleware/           # Auth, validation, etc.
+│   │   │   ├── __init__.py
+│   │   │   ├── ocr_service.py    # Receipt OCR processing
+│   │   │   ├── bill_service.py   # Bill calculation logic
+│   │   │   └── payment_service.py
+│   │   ├── core/                 # Core configuration
+│   │   │   ├── __init__.py
+│   │   │   ├── config.py         # Settings and environment
+│   │   │   ├── security.py       # Auth utilities
+│   │   │   └── database.py       # DB connection
+│   │   ├── middleware/           # Custom middleware
+│   │   │   └── __init__.py
 │   │   ├── socket/               # WebSocket handlers
-│   │   ├── types/                # TypeScript types
+│   │   │   ├── __init__.py
+│   │   │   └── events.py
 │   │   └── utils/                # Helper functions
-│   ├── prisma/                   # Database schema & migrations
-│   │   └── schema.prisma
-│   └── package.json
+│   │       └── __init__.py
+│   ├── alembic/                  # Database migrations
+│   │   ├── versions/
+│   │   └── env.py
+│   ├── tests/
+│   ├── requirements.txt
+│   └── pyproject.toml
 │
 ├── shared/                       # Shared types between frontend/backend
 │   └── types/
@@ -99,70 +129,71 @@ bill-splitting/
 ## Database Schema
 
 ### Core Tables
+*Note: Using SQLAlchemy ORM with PostgreSQL backend*
 
 #### Users
-```sql
+```python
 users
   - id (UUID, PK)
-  - email (String, unique)
+  - email (String, unique, indexed)
   - name (String)
   - phone (String, optional)
   - payment_methods (JSON) # Venmo, PayPal handles
-  - created_at (Timestamp)
-  - updated_at (Timestamp)
+  - created_at (DateTime)
+  - updated_at (DateTime)
 ```
 
 #### Sessions
-```sql
+```python
 sessions
   - id (UUID, PK)
-  - session_code (String, unique) # Short shareable code
+  - session_code (String, unique, indexed) # Short shareable code
   - created_by (UUID, FK -> users)
   - restaurant_name (String)
   - receipt_image_url (String)
-  - subtotal (Decimal)
-  - tax (Decimal)
-  - tip (Decimal)
-  - total (Decimal)
+  - subtotal (Numeric(10,2))
+  - tax (Numeric(10,2))
+  - tip (Numeric(10,2))
+  - total (Numeric(10,2))
   - status (Enum: active, completed, cancelled)
-  - created_at (Timestamp)
-  - updated_at (Timestamp)
+  - created_at (DateTime)
+  - updated_at (DateTime)
 ```
 
 #### Session Participants
-```sql
+```python
 session_participants
   - id (UUID, PK)
   - session_id (UUID, FK -> sessions)
   - user_id (UUID, FK -> users, nullable) # Null for guests
   - guest_name (String, nullable)
-  - amount_owed (Decimal)
-  - amount_paid (Decimal)
+  - amount_owed (Numeric(10,2))
+  - amount_paid (Numeric(10,2))
   - payment_status (Enum: pending, paid, settled)
-  - joined_at (Timestamp)
+  - joined_at (DateTime)
 ```
 
 #### Bill Items
-```sql
+```python
 bill_items
   - id (UUID, PK)
   - session_id (UUID, FK -> sessions)
   - name (String)
-  - price (Decimal)
+  - price (Numeric(10,2))
   - quantity (Integer)
   - category (String, optional)
   - line_number (Integer) # Order on receipt
-  - created_at (Timestamp)
+  - created_at (DateTime)
 ```
 
 #### Item Assignments
-```sql
+```python
 item_assignments
   - id (UUID, PK)
   - item_id (UUID, FK -> bill_items)
   - participant_id (UUID, FK -> session_participants)
-  - split_percentage (Decimal) # 1.0 = 100%, 0.5 = 50%
-  - amount (Decimal)
+  - split_percentage (Numeric(5,4)) # 1.0000 = 100%, 0.5000 = 50%
+  - amount (Numeric(10,2))
 ```
 
 ## API Endpoints
@@ -291,33 +322,57 @@ item_assignments
 ## Getting Started
 
 ### Prerequisites
-- Node.js 18+
+- Python 3.11+
+- Node.js 18+ (for frontend)
 - PostgreSQL 14+
 - Redis (for caching and sessions)
 - Google Cloud Vision API key (or alternative OCR service)
 
 ### Installation
+
+#### Backend Setup
 ```bash
 # Clone the repository
 git clone https://github.com/yourusername/bill-splitting.git
-cd bill-splitting
+cd bill-splitting/backend
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
-npm install
+pip install -r requirements.txt
 
 # Set up environment variables
 cp .env.example .env
 # Edit .env with your configuration
 
-# Set up database
-npm run db:migrate
+# Run database migrations
+alembic upgrade head
 
-# Start development servers
+# Start development server
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+#### Frontend Setup
+```bash
+cd bill-splitting/frontend
+
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env.local
+# Edit .env.local with your configuration
+
+# Start development server
 npm run dev
 ```
 
 ### Environment Variables
-```
+
+#### Backend (.env)
+```bash
 # Database
 DATABASE_URL=postgresql://user:password@localhost:5432/bill_splitting
 REDIS_URL=redis://localhost:6379
@@ -327,18 +382,39 @@ GOOGLE_CLOUD_VISION_API_KEY=your_api_key
 # OR
 AWS_ACCESS_KEY_ID=your_key
 AWS_SECRET_ACCESS_KEY=your_secret
+AWS_REGION=us-east-1
 
-# Authentication
-NEXTAUTH_SECRET=your_secret
-NEXTAUTH_URL=http://localhost:3000
+# Authentication (JWT)
+SECRET_KEY=your-secret-key-min-32-characters
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
 
 # File Storage
 AWS_S3_BUCKET=your_bucket
-AWS_REGION=us-east-1
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+
+# CORS
+FRONTEND_URL=http://localhost:3000
 
 # Payment APIs (optional)
 VENMO_API_KEY=your_key
 PAYPAL_CLIENT_ID=your_client_id
+
+# Application
+DEBUG=True
+LOG_LEVEL=INFO
+```
+
+#### Frontend (.env.local)
+```bash
+# API
+NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_WS_URL=ws://localhost:8000
+
+# Optional: Client-side API keys
+NEXT_PUBLIC_SENTRY_DSN=your_sentry_dsn
 ```
 
 ## Contributing
