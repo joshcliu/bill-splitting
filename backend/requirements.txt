@@ -1,0 +1,11 @@
+# Claude API
+anthropic==0.39.0
+
+# Environment variables
+python-dotenv==1.0.0
+
+# Image processing
+Pillow==10.2.0
+
+# Data validation
+pydantic==2.5.3
