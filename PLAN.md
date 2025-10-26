@@ -43,9 +43,10 @@ This application allows users to scan restaurant receipts and automatically spli
 - **API**: RESTful + WebSocket
 
 ### Infrastructure
-- **Hosting**: Vercel (frontend), Railway/Render (backend)
+- **Hosting**: Vercel (frontend), Railway/Render/Fly.io (Python backend)
 - **File Storage**: AWS S3 or Cloudinary (receipt images)
 - **Monitoring**: Sentry for error tracking
+- **API Documentation**: Automatic with FastAPI (Swagger UI + ReDoc)
 
 ## Project Structure
 
