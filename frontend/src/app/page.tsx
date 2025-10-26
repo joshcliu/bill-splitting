@@ -59,27 +59,27 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="min-h-screen bg-gray-900">
       <div className="min-h-screen flex flex-col items-center justify-center p-4 py-12">
         <div className="max-w-6xl w-full space-y-12">
           {/* Header */}
           <div className="text-center space-y-6">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 dark:bg-blue-950 border border-blue-200 dark:border-blue-800">
-              <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-950 border border-blue-800">
+              <Sparkles className="w-4 h-4 text-blue-400" />
+              <span className="text-sm font-medium text-blue-300">
                 AI-Powered Bill Splitting
               </span>
             </div>
 
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-gray-900 dark:text-white">
+            <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-white">
               Split Bills
               <br />
-              <span className="text-blue-600 dark:text-blue-500">
+              <span className="text-blue-500">
                 Effortlessly
               </span>
             </h1>
 
-            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
               Scan receipts with AI, split with friends in real-time, and settle up instantly.
             </p>
           </div>
@@ -87,13 +87,13 @@ export default function Home() {
           {/* Main Actions */}
           <div className="grid gap-6 md:grid-cols-2 max-w-4xl mx-auto">
             {/* Create New Bill */}
-            <Card className="hover:shadow-lg transition-shadow border bg-white dark:bg-gray-900">
+            <Card className="hover:shadow-lg transition-shadow border border-gray-800 bg-gray-950">
               <CardHeader>
                 <div className="w-14 h-14 rounded-xl bg-blue-600 flex items-center justify-center mb-4">
                   <Receipt className="w-7 h-7 text-white" />
                 </div>
-                <CardTitle className="text-2xl">Create New Bill</CardTitle>
-                <CardDescription className="text-base">
+                <CardTitle className="text-2xl text-white">Create New Bill</CardTitle>
+                <CardDescription className="text-base text-gray-400">
                   Scan a receipt and invite friends to split
                 </CardDescription>
               </CardHeader>
@@ -110,13 +110,13 @@ export default function Home() {
             </Card>
 
             {/* Join Existing Bill */}
-            <Card className="hover:shadow-lg transition-shadow border bg-white dark:bg-gray-900">
+            <Card className="hover:shadow-lg transition-shadow border border-gray-800 bg-gray-950">
               <CardHeader>
                 <div className="w-14 h-14 rounded-xl bg-purple-600 flex items-center justify-center mb-4">
                   <Users className="w-7 h-7 text-white" />
                 </div>
-                <CardTitle className="text-2xl">Join a Bill</CardTitle>
-                <CardDescription className="text-base">
+                <CardTitle className="text-2xl text-white">Join a Bill</CardTitle>
+                <CardDescription className="text-base text-gray-400">
                   Enter your friend's session code
                 </CardDescription>
               </CardHeader>
@@ -150,32 +150,32 @@ export default function Home() {
 
           {/* Features */}
           <div className="grid gap-6 md:grid-cols-3 max-w-5xl mx-auto pt-8">
-            <div className="p-6 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
+            <div className="p-6 rounded-xl bg-gray-950 border border-gray-800">
               <div className="w-12 h-12 rounded-lg bg-green-600 flex items-center justify-center mb-4">
                 <Sparkles className="w-6 h-6 text-white" />
               </div>
-              <h3 className="text-lg font-bold mb-2">AI Receipt Scanning</h3>
-              <p className="text-gray-600 dark:text-gray-400">
+              <h3 className="text-lg font-bold mb-2 text-white">AI Receipt Scanning</h3>
+              <p className="text-gray-400">
                 Powered by Claude AI to extract items with incredible accuracy
               </p>
             </div>
 
-            <div className="p-6 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
+            <div className="p-6 rounded-xl bg-gray-950 border border-gray-800">
               <div className="w-12 h-12 rounded-lg bg-orange-600 flex items-center justify-center mb-4">
                 <Zap className="w-6 h-6 text-white" />
               </div>
-              <h3 className="text-lg font-bold mb-2">Real-time Sync</h3>
-              <p className="text-gray-600 dark:text-gray-400">
+              <h3 className="text-lg font-bold mb-2 text-white">Real-time Sync</h3>
+              <p className="text-gray-400">
                 Everyone sees updates instantly as you split the bill
               </p>
             </div>
 
-            <div className="p-6 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
+            <div className="p-6 rounded-xl bg-gray-950 border border-gray-800">
               <div className="w-12 h-12 rounded-lg bg-blue-600 flex items-center justify-center mb-4">
                 <Shield className="w-6 h-6 text-white" />
               </div>
-              <h3 className="text-lg font-bold mb-2">Fair & Accurate</h3>
-              <p className="text-gray-600 dark:text-gray-400">
+              <h3 className="text-lg font-bold mb-2 text-white">Fair & Accurate</h3>
+              <p className="text-gray-400">
                 Automatic tax and tip calculation split proportionally
               </p>
             </div>
